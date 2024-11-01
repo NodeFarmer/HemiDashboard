@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data from Wallet Pages</title>
+</head>
+<body>
+    <h1>Fetch and Combine Wallet Data</h1>
+    <textarea id="walletsInput" rows="10" cols="50" placeholder="Enter one wallet per line"></textarea><br>
+    <button onclick="fetchData()">Fetch Data</button>
+
+    <script>
+        async function fetchData() {
+            const wallets = document.getElementById('walletsInput').value.trim().split('\n');
+            const baseURL = 'http://testnet.popstats.hemi.network/';
+            
+            const dataArrays = {
+                xValues: [],
+                popTxArray: [],
+                popFeesArray: [],
+                popFeesRateArray: [],
+                keystonesDailyArray: []
+            };
+
+            for (let wallet of wallets) {
+                const url = `${baseURL}${wallet.trim()}.html`;
+                try {
+                    const response = await fetch(url);
+                    const text = await response.text();
+
+                    // Regular expressions to match the arrays in the script tags
+                    const xValuesMatch = text.match(/var xValues = \[(.*?)\];/s);
+                    const popTxArrayMatch = text.match(/var popTxArray = \[(.*?)\];/s);
+                    const popFeesArrayMatch = text.match(/var popFeesArray = \[(.*?)\];/s);
+                    const popFeesRateArrayMatch = text.match(/var popFeesRateArray = \[(.*?)\];/s);
+                    const keystonesDailyArrayMatch = text.match(/var keystonesDailyArray = \[(.*?)\];/s);
+
+                    // Parse and combine arrays if they are found
+                    if (xValuesMatch) {
+                        dataArrays.xValues = JSON.parse(`[${xValuesMatch[1]}]`);
+                    }
+                    if (popTxArrayMatch) {
+                        dataArrays.popTxArray.push(...JSON.parse(`[${popTxArrayMatch[1]}]`));
+                    }
+                    if (popFeesArrayMatch) {
+                        dataArrays.popFeesArray.push(...JSON.parse(`[${popFeesArrayMatch[1]}]`));
+                    }
+                    if (popFeesRateArrayMatch) {
+                        dataArrays.popFeesRateArray.push(...JSON.parse(`[${popFeesRateArrayMatch[1]}]`));
+                    }
+                    if (keystonesDailyArrayMatch) {
+                        dataArrays.keystonesDailyArray.push(...JSON.parse(`[${keystonesDailyArrayMatch[1]}]`));
+                    }
+
+                } catch (error) {
+                    console.error(`Failed to fetch data from ${url}:`, error);
+                }
+            }
+
+            console.log("Combined Data Arrays:", dataArrays);
+            console.log("xValues length:", dataArrays.xValues.length);
+            console.log("popTxArray length:", dataArrays.popTxArray.length);
+            console.log("popFeesArray length:", dataArrays.popFeesArray.length);
+            console.log("popFeesRateArray length:", dataArrays.popFeesRateArray.length);
+            console.log("keystonesDailyArray length:", dataArrays.keystonesDailyArray.length);
+        }
+    </script>
+</body>
+</html>
