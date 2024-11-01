@@ -46,8 +46,9 @@
                     const response = await fetch(proxyURL, options);
                     let text = await response.text();
 
-                    // Clean up the text to remove non-JSON compliant values like (so far)
-                    text = text.replace(/,\s*"(so far)"/g, "");  // Removes any instances of , "(so far)"
+                    // Clean up the text to remove non-JSON compliant values
+                    text = text.replace(/,\s*"\(so far\)"\]/g, "]"); // Remove any (so far) at end of array
+                    text = text.replace(/,\s*".*?"\]/g, "]"); // Remove any other text in quotes at the end of an array
                     
                     // Regular expressions to match the arrays in the script tags
                     const xValuesMatch = text.match(/var xValues = \[(.*?)\];/s);
