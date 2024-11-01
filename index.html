@@ -65,6 +65,12 @@
     </div>
 
     <script>
+        // Function to shorten the wallet address
+        function shortenWallet(wallet) {
+            if (wallet.length <= 8) return wallet; // No need to shorten
+            return `${wallet.slice(0, 4)}...${wallet.slice(-4)}`;
+        }
+
         // Load wallets from local storage on page load
         document.addEventListener("DOMContentLoaded", () => {
             const storedWallets = localStorage.getItem("wallets");
@@ -127,10 +133,10 @@
                     const maxPopFeeRate = Math.max(...popFeesRateArray);
                     const totalKeystones = keystonesDailyArray.reduce((a, b) => a + b, 0);
 
-                    // Add a row to the table
+                    // Add a row to the table with shortened wallet address
                     const row = `
                         <tr class="text-gray-400">
-                            <td class="p-2 text-center">${walletTrimmed}</td>
+                            <td class="p-2 text-center">${shortenWallet(walletTrimmed)}</td>
                             <td class="p-2 text-center">${dateRange}</td>
                             <td class="p-2 text-center">${totalPopTx}</td>
                             <td class="p-2 text-center">${popTxToday}</td>
