@@ -5,26 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hemi Pop Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d1117; /* Dark background */
+            color: #c9d1d9; /* Light text color */
+        }
+        .crypto-text {
+            color: #00ff99; /* Neon green */
+        }
+        .crypto-button {
+            background-color: #005f73;
+            color: #00f5d4;
+        }
+        .crypto-button:hover {
+            background-color: #00f5d4;
+            color: #005f73;
+        }
+        .crypto-table {
+            background-color: #161b22; /* Slightly lighter background for table */
+            color: #c9d1d9;
+        }
+        .crypto-table th, .crypto-table td {
+            border: 1px solid #21262d;
+        }
+        .crypto-input {
+            background-color: #161b22;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
-    <div class="w-full max-w-lg bg-white shadow-lg rounded-lg p-6 mb-8">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Hemi Pop Public Keys</h1>
-        <textarea id="walletsInput" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter one wallet per line"></textarea>
-        <button onclick="fetchData()" class="mt-4 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">Fetch Data</button>
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-lg bg-gray-900 shadow-lg rounded-lg p-6 mb-8">
+        <h1 class="text-3xl font-bold text-center crypto-text mb-4">Hemi Pop Public Keys</h1>
+        <textarea id="walletsInput" rows="10" class="crypto-input w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Enter one wallet per line"></textarea>
+        <button onclick="fetchData()" class="crypto-button mt-4 w-full font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">Fetch Data</button>
     </div>
 
-    <div class="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Combined Data Overview</h2>
+    <div class="w-full max-w-4xl crypto-table shadow-lg rounded-lg p-6">
+        <h2 class="text-2xl font-semibold crypto-text mb-4">Combined Data Overview</h2>
         <div class="overflow-x-auto">
-            <table class="min-w-full border border-gray-300">
+            <table class="min-w-full">
                 <thead>
-                    <tr class="bg-gray-100">
-                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Wallet</th>
-                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Date Range</th>
-                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Total popTx</th>
-                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Total popFees</th>
-                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Max popFeeRate</th>
-                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Total keystones</th>
+                    <tr class="bg-gray-800">
+                        <th class="p-2 text-green-500 font-medium">Wallet</th>
+                        <th class="p-2 text-green-500 font-medium">Date Range</th>
+                        <th class="p-2 text-green-500 font-medium">Total popTx</th>
+                        <th class="p-2 text-green-500 font-medium">popTx Today</th>
+                        <th class="p-2 text-green-500 font-medium">Avg popFees</th>
+                        <th class="p-2 text-green-500 font-medium">Max popFeeRate</th>
+                        <th class="p-2 text-green-500 font-medium">Total keystones</th>
                     </tr>
                 </thead>
                 <tbody id="dataTable">
@@ -35,19 +65,24 @@
     </div>
 
     <script>
+        // Load wallets from local storage on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            const storedWallets = localStorage.getItem("wallets");
+            if (storedWallets) {
+                document.getElementById("walletsInput").value = storedWallets;
+            }
+        });
+
         async function fetchData() {
-            const wallets = document.getElementById('walletsInput').value.trim().split('\n');
+            const walletsInput = document.getElementById("walletsInput");
+            const wallets = walletsInput.value.trim().split('\n');
+            
+            // Save wallets to local storage
+            localStorage.setItem("wallets", walletsInput.value);
+
             const baseURL = 'https://testnet.popstats.hemi.network/pubkey/';
             const proxyURL = 'https://http-cors-proxy.p.rapidapi.com/';
             
-            const dataArrays = {
-                xValues: [],
-                popTxArray: [],
-                popFeesArray: [],
-                popFeesRateArray: [],
-                keystonesDailyArray: []
-            };
-
             document.getElementById('dataTable').innerHTML = ""; // Clear previous data
 
             for (let wallet of wallets) {
@@ -87,19 +122,21 @@
                     // Calculate summary statistics
                     const dateRange = `${xValues[0]} - ${xValues[xValues.length - 1]}`;
                     const totalPopTx = popTxArray.reduce((a, b) => a + b, 0);
-                    const totalPopFees = popFeesArray.reduce((a, b) => a + b, 0).toFixed(2);
+                    const popTxToday = popTxArray[popTxArray.length - 1] || 0; // Last value for today
+                    const avgPopFees = popFeesArray.length ? (popFeesArray.reduce((a, b) => a + b, 0) / popFeesArray.length).toFixed(2) : "0.00";
                     const maxPopFeeRate = Math.max(...popFeesRateArray);
                     const totalKeystones = keystonesDailyArray.reduce((a, b) => a + b, 0);
 
                     // Add a row to the table
                     const row = `
-                        <tr class="text-gray-700">
-                            <td class="p-2 border border-gray-300">${walletTrimmed}</td>
-                            <td class="p-2 border border-gray-300">${dateRange}</td>
-                            <td class="p-2 border border-gray-300">${totalPopTx}</td>
-                            <td class="p-2 border border-gray-300">${totalPopFees}</td>
-                            <td class="p-2 border border-gray-300">${maxPopFeeRate}</td>
-                            <td class="p-2 border border-gray-300">${totalKeystones}</td>
+                        <tr class="text-gray-400">
+                            <td class="p-2 text-center">${walletTrimmed}</td>
+                            <td class="p-2 text-center">${dateRange}</td>
+                            <td class="p-2 text-center">${totalPopTx}</td>
+                            <td class="p-2 text-center">${popTxToday}</td>
+                            <td class="p-2 text-center">${avgPopFees}</td>
+                            <td class="p-2 text-center">${maxPopFeeRate}</td>
+                            <td class="p-2 text-center">${totalKeystones}</td>
                         </tr>
                     `;
                     document.getElementById('dataTable').insertAdjacentHTML('beforeend', row);
