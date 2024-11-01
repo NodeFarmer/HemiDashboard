@@ -6,11 +6,32 @@
     <title>Hemi Pop Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
-    <div class="w-full max-w-lg bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Hemi Pop Public Keys v2</h1>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-lg bg-white shadow-lg rounded-lg p-6 mb-8">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Hemi Pop Public Keys</h1>
         <textarea id="walletsInput" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter one wallet per line"></textarea>
         <button onclick="fetchData()" class="mt-4 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">Fetch Data</button>
+    </div>
+
+    <div class="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Combined Data Overview</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Wallet</th>
+                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Date Range</th>
+                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Total popTx</th>
+                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Total popFees</th>
+                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Max popFeeRate</th>
+                        <th class="p-2 border border-gray-300 text-gray-600 font-medium">Total keystones</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTable">
+                    <!-- Rows will be populated here dynamically -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -27,8 +48,11 @@
                 keystonesDailyArray: []
             };
 
+            document.getElementById('dataTable').innerHTML = ""; // Clear previous data
+
             for (let wallet of wallets) {
-                const targetURL = `${baseURL}${wallet.trim().toUpperCase()}.html`;
+                const walletTrimmed = wallet.trim().toUpperCase();
+                const targetURL = `${baseURL}${walletTrimmed}.html`;
                 
                 const options = {
                     method: 'POST',
@@ -53,34 +77,37 @@
                     const popFeesRateArrayMatch = text.match(/var popFeesRateArray = (\[.*?\]);/s);
                     const keystonesDailyArrayMatch = text.match(/var keystonesDailyArray = (\[.*?\]);/s);
 
-                    // Use eval to directly evaluate the JavaScript array syntax
-                    if (xValuesMatch) {
-                        dataArrays.xValues = eval(xValuesMatch[1]);
-                    }
-                    if (popTxArrayMatch) {
-                        dataArrays.popTxArray.push(...eval(popTxArrayMatch[1]));
-                    }
-                    if (popFeesArrayMatch) {
-                        dataArrays.popFeesArray.push(...eval(popFeesArrayMatch[1]));
-                    }
-                    if (popFeesRateArrayMatch) {
-                        dataArrays.popFeesRateArray.push(...eval(popFeesRateArrayMatch[1]));
-                    }
-                    if (keystonesDailyArrayMatch) {
-                        dataArrays.keystonesDailyArray.push(...eval(keystonesDailyArrayMatch[1]));
-                    }
+                    // Evaluate each array
+                    const xValues = xValuesMatch ? eval(xValuesMatch[1]) : [];
+                    const popTxArray = popTxArrayMatch ? eval(popTxArrayMatch[1]).map(Number) : [];
+                    const popFeesArray = popFeesArrayMatch ? eval(popFeesArrayMatch[1]).map(Number) : [];
+                    const popFeesRateArray = popFeesRateArrayMatch ? eval(popFeesRateArrayMatch[1]).map(Number) : [];
+                    const keystonesDailyArray = keystonesDailyArrayMatch ? eval(keystonesDailyArrayMatch[1]).map(Number) : [];
+
+                    // Calculate summary statistics
+                    const dateRange = `${xValues[0]} - ${xValues[xValues.length - 1]}`;
+                    const totalPopTx = popTxArray.reduce((a, b) => a + b, 0);
+                    const totalPopFees = popFeesArray.reduce((a, b) => a + b, 0).toFixed(2);
+                    const maxPopFeeRate = Math.max(...popFeesRateArray);
+                    const totalKeystones = keystonesDailyArray.reduce((a, b) => a + b, 0);
+
+                    // Add a row to the table
+                    const row = `
+                        <tr class="text-gray-700">
+                            <td class="p-2 border border-gray-300">${walletTrimmed}</td>
+                            <td class="p-2 border border-gray-300">${dateRange}</td>
+                            <td class="p-2 border border-gray-300">${totalPopTx}</td>
+                            <td class="p-2 border border-gray-300">${totalPopFees}</td>
+                            <td class="p-2 border border-gray-300">${maxPopFeeRate}</td>
+                            <td class="p-2 border border-gray-300">${totalKeystones}</td>
+                        </tr>
+                    `;
+                    document.getElementById('dataTable').insertAdjacentHTML('beforeend', row);
 
                 } catch (error) {
                     console.error(`Failed to fetch data from ${targetURL}:`, error);
                 }
             }
-
-            console.log("Combined Data Arrays:", dataArrays);
-            console.log("xValues length:", dataArrays.xValues.length);
-            console.log("popTxArray length:", dataArrays.popTxArray.length);
-            console.log("popFeesArray length:", dataArrays.popFeesArray.length);
-            console.log("popFeesRateArray length:", dataArrays.popFeesRateArray.length);
-            console.log("keystonesDailyArray length:", dataArrays.keystonesDailyArray.length);
         }
     </script>
 </body>
