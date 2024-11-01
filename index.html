@@ -4,78 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hemi Pop Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <div class="max-w-3xl mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">Hemi Pop Public Keys</h1>
-        
-        <textarea 
-            id="walletsInput" 
-            rows="10" 
-            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Enter one wallet per line"
-        ></textarea>
-        
-        <button 
-            onclick="fetchData()" 
-            class="mt-4 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-            Fetch Data
-        </button>
-        
-        <div id="result" class="mt-6"></div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-lg bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Hemi Pop Public Keys</h1>
+        <textarea id="walletsInput" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter one wallet per line"></textarea>
+        <button onclick="loadIframes()" class="mt-4 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">Load Data with Iframes</button>
     </div>
 
+    <div id="iframesContainer" style="display:none;"></div>
+
     <script>
-        async function fetchData() {
+        function loadIframes() {
             const wallets = document.getElementById('walletsInput').value.trim().split('\n');
             const baseURL = 'https://testnet.popstats.hemi.network/pubkey/';
-            const dataArrays = {
-                xValues: [],
-                popTxArray: [],
-                popFeesArray: [],
-                popFeesRateArray: [],
-                keystonesDailyArray: []
-            };
+            const iframesContainer = document.getElementById('iframesContainer');
+            iframesContainer.innerHTML = '';  // Clear previous iframes
 
-            for (let wallet of wallets) {
-                const url = `${baseURL}${wallet.trim().toUpperCase()}.html`;
-                try {
-                    const response = await fetch(url,{ mode: 'no-cors' });
-                    const text = await response.text();
+            wallets.forEach(wallet => {
+                const walletUpper = wallet.trim().toUpperCase();
+                const iframe = document.createElement('iframe');
+                iframe.src = `${baseURL}${walletUpper}.html`;
+                iframe.style.display = 'none';
+                
+                // Listen for the load event to process the iframe content
+                iframe.onload = () => {
+                    try {
+                        const doc = iframe.contentDocument || iframe.contentWindow.document;
+                        const scriptContent = doc.querySelector('script').textContent;
 
-                    // Regular expressions to match the arrays in the script tags
-                    const xValuesMatch = text.match(/var xValues = \[(.*?)\];/s);
-                    const popTxArrayMatch = text.match(/var popTxArray = \[(.*?)\];/s);
-                    const popFeesArrayMatch = text.match(/var popFeesArray = \[(.*?)\];/s);
-                    const popFeesRateArrayMatch = text.match(/var popFeesRateArray = \[(.*?)\];/s);
-                    const keystonesDailyArrayMatch = text.match(/var keystonesDailyArray = \[(.*?)\];/s);
+                        // Extract data with regex, assuming similar extraction as before
+                        const xValuesMatch = scriptContent.match(/var xValues = \[(.*?)\];/s);
+                        const popTxArrayMatch = scriptContent.match(/var popTxArray = \[(.*?)\];/s);
+                        // Continue for other arrays
 
-                    // Parse and combine arrays if they are found
-                    if (xValuesMatch) {
-                        dataArrays.xValues = JSON.parse(`[${xValuesMatch[1]}]`);
+                        console.log("Extracted data for wallet:", walletUpper);
+                        console.log("xValues:", xValuesMatch ? JSON.parse(`[${xValuesMatch[1]}]`) : "No data");
+                        console.log("popTxArray:", popTxArrayMatch ? JSON.parse(`[${popTxArrayMatch[1]}]`) : "No data");
+                    } catch (error) {
+                        console.error("Error accessing iframe data for wallet:", walletUpper, error);
                     }
-                    if (popTxArrayMatch) {
-                        dataArrays.popTxArray.push(...JSON.parse(`[${popTxArrayMatch[1]}]`));
-                    }
-                    if (popFeesArrayMatch) {
-                        dataArrays.popFeesArray.push(...JSON.parse(`[${popFeesArrayMatch[1]}]`));
-                    }
-                    if (popFeesRateArrayMatch) {
-                        dataArrays.popFeesRateArray.push(...JSON.parse(`[${popFeesRateArrayMatch[1]}]`));
-                    }
-                    if (keystonesDailyArrayMatch) {
-                        dataArrays.keystonesDailyArray.push(...JSON.parse(`[${keystonesDailyArrayMatch[1]}]`));
-                    }
-
-                } catch (error) {
-                    console.error(`Failed to fetch data from ${url}:`, error);
-                }
-            }
-
-            console.log("Combined Data Arrays:", dataArrays);
-            document.getElementById('result').innerText = JSON.stringify(dataArrays, null, 2);
+                };
+                iframesContainer.appendChild(iframe);
+            });
         }
     </script>
 </body>
