@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch Data from Wallet Pages</title>
+    <title>Hemi Pop Dashboard</title>
 </head>
 <body>
-    <h1>Fetch and Combine Wallet Data</h1>
+    <h1>Hemi Pop Public keys</h1>
     <textarea id="walletsInput" rows="10" cols="50" placeholder="Enter one wallet per line"></textarea><br>
     <button onclick="fetchData()">Fetch Data</button>
 
@@ -24,7 +24,7 @@
             };
 
             for (let wallet of wallets) {
-                const url = `${baseURL}${wallet.trim()}.html`;
+                const url = `${baseURL}${wallet.trim().toUppercase()}.html`;
                 try {
                     const response = await fetch(url);
                     const text = await response.text();
