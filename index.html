@@ -31,7 +31,7 @@
         async function fetchData() {
             const wallets = document.getElementById('walletsInput').value.trim().split('\n');
             const baseURL = 'https://testnet.popstats.hemi.network/pubkey/';
-            
+            const proxyURL = 'https://cors-anywhere.herokuapp.com/';
             const dataArrays = {
                 xValues: [],
                 popTxArray: [],
@@ -41,7 +41,7 @@
             };
 
             for (let wallet of wallets) {
-                const url = `${baseURL}${wallet.trim().toUpperCase()}.html`;
+                const url = `${proxyURL}${baseURL}${wallet.trim().toUpperCase()}.html`;
                 try {
                     const response = await fetch(url);
                     const text = await response.text();
