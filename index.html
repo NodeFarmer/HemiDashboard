@@ -37,7 +37,8 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-lg bg-gray-900 shadow-lg rounded-lg p-6 mb-8">
-        <h1 class="text-3xl font-bold text-center crypto-text mb-4">Hemi Pop Public Keys</h1>
+        <h1 class="text-3xl font-bold text-center crypto-text mb-2">Hemi Pop Public Keys</h1>
+         <span class="text-md text-center crypto-text mb-4">by NodeFarmer</span> 
         <textarea id="walletsInput" rows="10" class="crypto-input w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Enter one wallet per line"></textarea>
         <button onclick="fetchData()" class="crypto-button mt-4 w-full font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">Fetch Data</button>
     </div>
@@ -52,9 +53,9 @@
                         <th class="p-2 text-green-500 font-medium">Date Range</th>
                         <th class="p-2 text-green-500 font-medium">Total popTx</th>
                         <th class="p-2 text-green-500 font-medium">popTx Today</th>
-                        <th class="p-2 text-green-500 font-medium">Avg popFees</th>
                         <th class="p-2 text-green-500 font-medium">Max popFeeRate</th>
-                        <th class="p-2 text-green-500 font-medium">Total keystones</th>
+                        <th class="p-2 text-green-500 font-medium">Total Keystones</th>
+                        <th class="p-2 text-green-500 font-medium">Keystones Today</th>
                     </tr>
                 </thead>
                 <tbody id="dataTable">
@@ -114,14 +115,12 @@
                     // Extract arrays using regex
                     const xValuesMatch = text.match(/var xValues = (\[.*?\]);/s);
                     const popTxArrayMatch = text.match(/var popTxArray = (\[.*?\]);/s);
-                    const popFeesArrayMatch = text.match(/var popFeesArray = (\[.*?\]);/s);
                     const popFeesRateArrayMatch = text.match(/var popFeesRateArray = (\[.*?\]);/s);
                     const keystonesDailyArrayMatch = text.match(/var keystonesDailyArray = (\[.*?\]);/s);
 
                     // Evaluate each array
                     const xValues = xValuesMatch ? eval(xValuesMatch[1]) : [];
                     const popTxArray = popTxArrayMatch ? eval(popTxArrayMatch[1]).map(Number) : [];
-                    const popFeesArray = popFeesArrayMatch ? eval(popFeesArrayMatch[1]).map(Number) : [];
                     const popFeesRateArray = popFeesRateArrayMatch ? eval(popFeesRateArrayMatch[1]).map(Number) : [];
                     const keystonesDailyArray = keystonesDailyArrayMatch ? eval(keystonesDailyArrayMatch[1]).map(Number) : [];
 
@@ -129,9 +128,9 @@
                     const dateRange = `${xValues[0]} - ${xValues[xValues.length - 1]}`;
                     const totalPopTx = popTxArray.reduce((a, b) => a + b, 0);
                     const popTxToday = popTxArray[popTxArray.length - 1] || 0; // Last value for today
-                    const avgPopFees = popFeesArray.length ? (popFeesArray.reduce((a, b) => a + b, 0) / popFeesArray.length).toFixed(2) : "0.00";
                     const maxPopFeeRate = Math.max(...popFeesRateArray);
                     const totalKeystones = keystonesDailyArray.reduce((a, b) => a + b, 0);
+                    const keystonesToday = keystonesDailyArray[keystonesDailyArray.length - 1] || 0; // Last value for today
 
                     // Add a row to the table with shortened wallet address
                     const row = `
@@ -140,9 +139,9 @@
                             <td class="p-2 text-center">${dateRange}</td>
                             <td class="p-2 text-center">${totalPopTx}</td>
                             <td class="p-2 text-center">${popTxToday}</td>
-                            <td class="p-2 text-center">${avgPopFees}</td>
                             <td class="p-2 text-center">${maxPopFeeRate}</td>
                             <td class="p-2 text-center">${totalKeystones}</td>
+                            <td class="p-2 text-center">${keystonesToday}</td>
                         </tr>
                     `;
                     document.getElementById('dataTable').insertAdjacentHTML('beforeend', row);
