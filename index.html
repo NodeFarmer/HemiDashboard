@@ -88,7 +88,7 @@
             localStorage.setItem("wallets", walletsInput.value);
 
             const baseURL = 'https://testnet.popstats.hemi.network/pubkey/';
-            const proxyURL = 'https://http-cors-proxy.p.rapidapi.com/';
+            const proxyURL = 'https://cors-proxy4.p.rapidapi.com/?url=';
             
             document.getElementById('dataTable').innerHTML = ""; // Clear previous data
 
@@ -97,19 +97,15 @@
                 const targetURL = `${baseURL}${walletTrimmed}.html`;
                 
                 const options = {
-                    method: 'POST',
-                    headers: {
-                        'x-rapidapi-key': 'hZw5guUWZImshs3M3gqrVC3n8qBap1Sirsfjsn3DBOKRaBT9ef',
-                        'x-rapidapi-host': 'http-cors-proxy.p.rapidapi.com',
-                        'Content-Type': 'application/json',
-                        'Origin': 'www.example.com',
-                        'X-Requested-With': 'www.example.com'
-                    },
-                    body: JSON.stringify({ url: targetURL })
+	method: 'GET',
+	headers: {
+		'x-rapidapi-key': 'hZw5guUWZImshs3M3gqrVC3n8qBap1Sirsfjsn3DBOKRaBT9ef',
+		'x-rapidapi-host': 'cors-proxy4.p.rapidapi.com'
+	}
                 };
 
                 try {
-                    const response = await fetch(proxyURL, options);
+                    const response = await fetch(proxyURL+ encodeURI(targetURL), options);
                     let text = await response.text();
 
                     // Extract arrays using regex
